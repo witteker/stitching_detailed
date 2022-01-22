@@ -7,4 +7,4 @@ RUN pip install --no-cache-dir -r requirements.txt
 
 COPY . .
 
-CMD [ "python", "./python_cli.py" ]
+ENTRYPOINT [ "python", "./stitching_detailed.py" ]
