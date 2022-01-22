@@ -529,7 +529,7 @@ def main():
             elif blend_type == "multiband":
                 blender = cv.detail_MultiBandBlender()
                 blender.setNumBands(
-                    (np.log(blend_width) / np.log(2.) - 1.).astype(np.int))
+                    (np.log(blend_width) / np.log(2.) - 1.).astype(int))
             elif blend_type == "feather":
                 blender = cv.detail_FeatherBlender()
                 blender.setSharpness(1. / blend_width)
