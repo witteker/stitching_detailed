@@ -8,6 +8,8 @@ Show how to use Stitcher API from python.
 # Python 2/3 compatibility
 from __future__ import print_function
 
+import sys
+
 import argparse
 from collections import OrderedDict
 
@@ -107,8 +109,10 @@ parser.add_argument(
 )
 parser.add_argument(
     '--features', action='store', default=list(FEATURES_FIND_CHOICES.keys())[0],
-    help="Type of features used for images matching. The default is '%s'." % list(
-        FEATURES_FIND_CHOICES.keys())[0],
+    help=str.format(
+        "Type of features used for images matching. The default is '{}'.",
+        list(FEATURES_FIND_CHOICES.keys())[0]
+    ),
     choices=FEATURES_FIND_CHOICES.keys(),
     type=str, dest='features'
 )
@@ -120,14 +124,17 @@ parser.add_argument(
 )
 parser.add_argument(
     '--estimator', action='store', default=list(ESTIMATOR_CHOICES.keys())[0],
-    help="Type of estimator used for transformation estimation. The default is '%s'." % list(
-        ESTIMATOR_CHOICES.keys())[0],
+    help=str.format(
+        "Type of estimator used for transformation estimation. The default is '{}'.",
+        list(ESTIMATOR_CHOICES.keys())[0]
+    ),
     choices=ESTIMATOR_CHOICES.keys(),
     type=str, dest='estimator'
 )
 parser.add_argument(
     '--match_conf', action='store',
-    help="Confidence for feature matching step. The default is 0.3 for ORB and 0.65 for other feature types.",
+    help="Confidence for feature matching step."
+         "The default is 0.3 for ORB and 0.65 for other feature types.",
     type=float, dest='match_conf'
 )
 parser.add_argument(
@@ -137,8 +144,10 @@ parser.add_argument(
 )
 parser.add_argument(
     '--ba', action='store', default=list(BA_COST_CHOICES.keys())[0],
-    help="Bundle adjustment cost function. The default is '%s'." % list(
-        BA_COST_CHOICES.keys())[0],
+    help=str.format(
+        "Bundle adjustment cost function. The default is '{}'.",
+        list(BA_COST_CHOICES.keys())[0]
+    ),
     choices=BA_COST_CHOICES.keys(),
     type=str, dest='ba'
 )
@@ -154,8 +163,10 @@ parser.add_argument(
 )
 parser.add_argument(
     '--wave_correct', action='store', default=list(WAVE_CORRECT_CHOICES.keys())[0],
-    help="Perform wave effect correction. The default is '%s'" % list(
-        WAVE_CORRECT_CHOICES.keys())[0],
+    help=str.format(
+        "Perform wave effect correction. The default is '{}'",
+        list(WAVE_CORRECT_CHOICES.keys())[0]
+    ),
     choices=WAVE_CORRECT_CHOICES.keys(),
     type=str, dest='wave_correct'
 )
@@ -166,7 +177,10 @@ parser.add_argument(
 )
 parser.add_argument(
     '--warp', action='store', default=WARP_CHOICES[0],
-    help="Warp surface type. The default is '%s'." % WARP_CHOICES[0],
+    help=str.format(
+        "Warp surface type. The default is '{}'.",
+         WARP_CHOICES[0]
+    ),
     choices=WARP_CHOICES,
     type=str, dest='warp'
 )
@@ -177,8 +191,10 @@ parser.add_argument(
 )
 parser.add_argument(
     '--seam', action='store', default=list(SEAM_FIND_CHOICES.keys())[0],
-    help="Seam estimation method. The default is '%s'." % list(
-        SEAM_FIND_CHOICES.keys())[0],
+    help=str.format(
+        "Seam estimation method. The default is '{}'.",
+        list(SEAM_FIND_CHOICES.keys())[0]
+    ),
     choices=SEAM_FIND_CHOICES.keys(),
     type=str, dest='seam'
 )
@@ -189,8 +205,10 @@ parser.add_argument(
 )
 parser.add_argument(
     '--expos_comp', action='store', default=list(EXPOS_COMP_CHOICES.keys())[0],
-    help="Exposure compensation method. The default is '%s'." % list(
-        EXPOS_COMP_CHOICES.keys())[0],
+    help=str.format(
+        "Exposure compensation method. The default is '{}'.",
+        list(EXPOS_COMP_CHOICES.keys())[0]
+    ),
     choices=EXPOS_COMP_CHOICES.keys(),
     type=str, dest='expos_comp'
 )
@@ -211,7 +229,10 @@ parser.add_argument(
 )
 parser.add_argument(
     '--blend', action='store', default=BLEND_CHOICES[0],
-    help="Blending method. The default is '%s'." % BLEND_CHOICES[0],
+    help=str.format(
+        "Blending method. The default is '{}'.",
+        BLEND_CHOICES[0]
+    ),
     choices=BLEND_CHOICES,
     type=str, dest='blend'
 )
@@ -241,6 +262,7 @@ __doc__ += '\n' + parser.format_help()
 
 
 def get_matcher(args):
+    """get the matcher"""
     try_cuda = args.try_cuda
     matcher_type = args.matcher
     if args.match_conf is None:
@@ -263,6 +285,7 @@ def get_matcher(args):
 
 
 def get_compensator(args):
+    """get the compensator"""
     expos_comp_type = EXPOS_COMP_CHOICES[args.expos_comp]
     expos_comp_nr_feeds = args.expos_comp_nr_feeds
     expos_comp_block_size = args.expos_comp_block_size
@@ -283,6 +306,7 @@ def get_compensator(args):
 
 
 def main():
+    """"main"""
     args = parser.parse_args()
     img_names = args.img_names
     print(img_names)
@@ -308,7 +332,7 @@ def main():
             timelapse_type = cv.detail.Timelapser_CROP
         else:
             print("Bad timelapse method")
-            exit()
+            sys.exit()
     else:
         timelapse = False
     finder = FEATURES_FIND_CHOICES[args.features]()
@@ -323,7 +347,7 @@ def main():
         full_img = cv.imread(name)
         if full_img is None:
             print("Cannot read image ", name)
-            exit()
+            sys.exit()
         full_img_sizes.append((full_img.shape[1], full_img.shape[0]))
         if work_megapix < 0:
             img = full_img
@@ -348,34 +372,34 @@ def main():
         images.append(img)
 
     matcher = get_matcher(args)
-    p = matcher.apply2(features)
+    var_p = matcher.apply2(features)
     matcher.collectGarbage()
 
     if save_graph:
-        with open(args.save_graph, 'w') as fh:
-            fh.write(cv.detail.matchesGraphAsString(img_names, p, conf_thresh))
+        with open(args.save_graph, 'w', encoding='UTF-8') as var_fh:
+            var_fh.write(cv.detail.matchesGraphAsString(img_names, var_p, conf_thresh))
 
-    indices = cv.detail.leaveBiggestComponent(features, p, conf_thresh)
+    indices = cv.detail.leaveBiggestComponent(features, var_p, conf_thresh)
     img_subset = []
     img_names_subset = []
     full_img_sizes_subset = []
-    for i in range(len(indices)):
-        img_names_subset.append(img_names[indices[i]])
-        img_subset.append(images[indices[i]])
-        full_img_sizes_subset.append(full_img_sizes[indices[i]])
+    for index in indices:
+        img_names_subset.append(img_names[index])
+        img_subset.append(images[index])
+        full_img_sizes_subset.append(full_img_sizes[index])
     images = img_subset
     img_names = img_names_subset
     full_img_sizes = full_img_sizes_subset
     num_images = len(img_names)
     if num_images < 2:
         print("Need more images")
-        exit()
+        sys.exit()
 
     estimator = ESTIMATOR_CHOICES[args.estimator]()
-    b, cameras = estimator.apply(features, p, None)
-    if not b:
+    var_b, cameras = estimator.apply(features, var_p, None)
+    if not var_b:
         print("Homography estimation failed.")
-        exit()
+        sys.exit()
     for cam in cameras:
         cam.R = cam.R.astype(np.float32)
 
@@ -393,10 +417,10 @@ def main():
     if ba_refine_mask[4] == 'x':
         refine_mask[1, 2] = 1
     adjuster.setRefinementMask(refine_mask)
-    b, cameras = adjuster.apply(features, p, cameras)
-    if not b:
+    var_b, cameras = adjuster.apply(features, var_p, cameras)
+    if not var_b:
         print("Camera parameters adjusting failed.")
-        exit()
+        sys.exit()
     focals = []
     for cam in cameras:
         focals.append(cam.focal)
@@ -419,27 +443,27 @@ def main():
     sizes = []
     masks = []
     for i in range(0, num_images):
-        um = cv.UMat(
+        var_um = cv.UMat(
             255 * np.ones((images[i].shape[0], images[i].shape[1]), np.uint8))
-        masks.append(um)
+        masks.append(var_um)
 
     # warper could be nullptr?
     warper = cv.PyRotationWarper(
         warp_type, warped_image_scale * seam_work_aspect)
     for idx in range(0, num_images):
-        K = cameras[idx].K().astype(np.float32)
+        var_k = cameras[idx].K().astype(np.float32)
         swa = seam_work_aspect
-        K[0, 0] *= swa
-        K[0, 2] *= swa
-        K[1, 1] *= swa
-        K[1, 2] *= swa
+        var_k[0, 0] *= swa
+        var_k[0, 2] *= swa
+        var_k[1, 1] *= swa
+        var_k[1, 2] *= swa
         corner, image_wp = warper.warp(
-            images[idx], K, cameras[idx].R, cv.INTER_LINEAR, cv.BORDER_REFLECT)
+            images[idx], var_k, cameras[idx].R, cv.INTER_LINEAR, cv.BORDER_REFLECT)
         corners.append(corner)
         sizes.append((image_wp.shape[1], image_wp.shape[0]))
         images_warped.append(image_wp)
-        p, mask_wp = warper.warp(
-            masks[idx], K, cameras[idx].R, cv.INTER_NEAREST, cv.BORDER_CONSTANT)
+        var_p, mask_wp = warper.warp(
+            masks[idx], var_k, cameras[idx].R, cv.INTER_NEAREST, cv.BORDER_CONSTANT)
         masks_warped.append(mask_wp.get())
 
     images_warped_f = []
@@ -472,10 +496,10 @@ def main():
                 cameras[i].focal *= compose_work_aspect
                 cameras[i].ppx *= compose_work_aspect
                 cameras[i].ppy *= compose_work_aspect
-                sz = (int(round(full_img_sizes[i][0] * compose_scale)),
+                var_sz = (int(round(full_img_sizes[i][0] * compose_scale)),
                       int(round(full_img_sizes[i][1] * compose_scale)))
-                K = cameras[i].K().astype(np.float32)
-                roi = warper.warpRoi(sz, K, cameras[i].R)
+                var_k = cameras[i].K().astype(np.float32)
+                roi = warper.warpRoi(var_sz, var_k, cameras[i].R)
                 corners.append(roi[0:2])
                 sizes.append(roi[2:4])
         if abs(compose_scale - 1) > 1e-1:
@@ -484,12 +508,12 @@ def main():
         else:
             img = full_img
         _img_size = (img.shape[1], img.shape[0])
-        K = cameras[idx].K().astype(np.float32)
+        var_k = cameras[idx].K().astype(np.float32)
         corner, image_warped = warper.warp(
-            img, K, cameras[idx].R, cv.INTER_LINEAR, cv.BORDER_REFLECT)
+            img, var_k, cameras[idx].R, cv.INTER_LINEAR, cv.BORDER_REFLECT)
         mask = 255 * np.ones((img.shape[0], img.shape[1]), np.uint8)
-        p, mask_warped = warper.warp(
-            mask, K, cameras[idx].R, cv.INTER_NEAREST, cv.BORDER_CONSTANT)
+        var_p, mask_warped = warper.warp(
+            mask, var_k, cameras[idx].R, cv.INTER_NEAREST, cv.BORDER_CONSTANT)
         compensator.apply(idx, corners[idx], image_warped, mask_warped)
         image_warped_s = image_warped.astype(np.int16)
         dilated_mask = cv.dilate(masks_warped[idx], None)
